@@ -3,7 +3,7 @@
 # Имя текущего пользователя
 USER=$(whoami)
 HOME_DIR="/home/${USER}"
-CONFIG_FILE="./conky.conf"
+TEMP_CONFIG_FILE="/tmp/conky.conf.tmp"
 CONKY_DESKTOP="${HOME_DIR}/.config/autostart/conky.desktop"
 
 # Функция установки пакета для Arch Linux
@@ -18,13 +18,17 @@ install_package() {
     fi
 }
 
-# Проверка наличия необходимых файлов
-if [ ! -f "$CONFIG_FILE" ]; then
-    echo "Ошибка: Файл '$CONFIG_FILE' не найден."
+# Загрузка файла конфигурации
+echo "Загружаю файл конфигурации conky.conf..."
+curl -fsSL https://raw.githubusercontent.com/als-creator/conky_conf/main/conky.conf -o "$TEMP_CONFIG_FILE"
+
+# Проверка загрузки файла
+if [ ! -f "$TEMP_CONFIG_FILE" ]; then
+    echo "Ошибка: не удалось загрузить файл conky.conf."
     exit 1
 fi
 
-# Проверка установленного дистрибутива
+# Определение используемого дистрибутива
 if cat /etc/os-release | grep -qi "arch"; then
     DISTRO="Arch Linux"
 else
@@ -34,7 +38,7 @@ fi
 # Создание директорий и копирование файлов
 echo "Создание директории .config/conky..."
 mkdir -p "${HOME_DIR}/.config/conky"
-cp "$CONFIG_FILE" "${HOME_DIR}/.config/conky/"
+mv "$TEMP_CONFIG_FILE" "${HOME_DIR}/.config/conky/conky.conf"
 
 # Установка автозагрузки
 echo "Настройка автоматического запуска Conky..."
