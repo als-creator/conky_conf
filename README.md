@@ -33,7 +33,7 @@ sudo pacman -S lm_sensors conky
 Авто-режим для простоты:
 
 ```bash
-sudo sensors-detect --auto #
+sudo sensors-detect --auto
 ```
 
 Включи сервис (автозагрузка модулей):
