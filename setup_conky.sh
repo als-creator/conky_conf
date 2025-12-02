@@ -6,7 +6,7 @@
 echo "Установка Conky + config для мониторинга температуры CPU"
 
 # Проверка дистрибутива (Arch-based)
-if! grep -qi arch /etc/os-release; then
+if ! grep -qi arch /etc/os-release; then
     echo "❌ Этот скрипт для Arch Linux (или производных). Для других — ручная установка."
     exit 1
 fi
