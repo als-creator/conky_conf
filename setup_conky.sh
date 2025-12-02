@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# setup_conky.sh — Индивидуальная установка Conky config для Arch Linux с автозапуском
+# setup_conky.sh — Установка Conky config для Arch Linux с автозапуском
 # Автор: als-creator (conky_conf repo)
 
 echo "Установка Conky + config для мониторинга температуры CPU с автозапуском"
@@ -20,13 +20,13 @@ echo "Настройка датчиков температуры..."
 sudo sensors-detect --auto <<< "yes"
 sudo systemctl enable --now lm_sensors
 
-# Создание директории и скачивание config
-echo "Создание ~/.config/conky..."
-mkdir -p ~/.config/conky
+# Создание общей директории для конфига
+echo "Создание общего config-файла (/etc/conky/)..."
+sudo mkdir -p /etc/conky
 
 # Скачиваем conky.conf из репо
-if curl -fsSL https://raw.githubusercontent.com/als-creator/conky_conf/main/conky.conf -o ~/.config/conky/conky.conf; then
-    echo "Config скачан: ~/.config/conky/conky.conf"
+if curl -fsSL https://raw.githubusercontent.com/als-creator/conky_conf/main/conky.conf -o /etc/conky/conky.conf; then
+    echo "Config скачан: /etc/conky/conky.conf"
 else
     echo "Ошибка скачивания config. Проверь интернет."
     exit 1
@@ -36,35 +36,55 @@ fi
 echo "Проверка температуры (sensors):"
 sensors | grep -E "(coretemp|Package id)" || echo "Датчики CPU не найдены. Перезагрузись и проверь modprobe coretemp."
 
-# Настройка автозапуска Conky через systemd для текущего пользователя
+# Создание systemd user service для автозапуска Conky
 echo "Настройка автозапуска Conky через systemd..."
 mkdir -p ~/.config/systemd/user
 
-cat > ~/.config/systemd/user/conky.service << 'EOF'
+cat > ~/.config/systemd/system/conky.service << 'EOF'
 [Unit]
-Description=Conky System Monitor
+Description=Conky System Monitor for User %I
 After=graphical-session.target
 Wants=graphical-session.target
 
 [Service]
+User=%I
+Group=%I
 Type=simple
-Environment=DISPLAY=:0
-ExecStart=/usr/bin/conky -c %h/.config/conky/conky.conf
+Environment=DISPLAY=:0 XAUTHORITY=/run/user/%U/gdm/Xauthority
+ExecStart=/usr/bin/conky -c /etc/conky/conky.conf
 Restart=on-failure
 RestartSec=5
 
 [Install]
-WantedBy=default.target
+WantedBy=graphical-session.target
 EOF
 
-# Перезагрузка systemd user units
+# Перезагрузка systemd user units и активация автозапуска
 systemctl --user daemon-reload
-
-# Активация службы
 systemctl --user enable --now conky.service
 
-# Подсказка пользователю
-echo "Автозапуск настроен! Conky будет запускаться автоматически при входе в графическую сессию."
-echo "Проверить статус службы можно командой: systemctl --user status conky.service"
+echo "Autostart настроен! Conky будет запускаться автоматически при входе в графическую сессию."
+echo "Проверить статус: systemctl --user status conky.service"
+
+# Запуск Conky для текущей сессии
+if pgrep -x "conky" > /dev/null; then
+    echo "Перезапуск Conky..."
+    killall conky
+    sleep 1
+fi
+
+conky -c ~/.config/conky/conky.conf &
+CONKY_PID=$!
+
+# Проверка запуска
+if ps -p $CONKY_PID > /dev/null; then
+    echo "Conky запущен! Температура Intel CPU отображается в реалтайм."
+    echo "Проверь: sensors (должно быть coretemp с ~30-40°C)"
+    echo "Остановить: systemctl --user stop conky.service"
+    echo "Отключить автозапуск: systemctl --user disable conky.service"
+else
+    echo "Conky не запустился. Проверь ошибки: conky -c ~/.config/conky/conky.conf"
+fi
 
 echo "Готово! Repo: https://github.com/als-creator/conky_conf"
+echo "Статус сервиса можно проверить через systemctl --user status conky.service"
