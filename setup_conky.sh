@@ -7,16 +7,16 @@ echo "Установка Conky + config для мониторинга темпе
 
 # Проверка дистрибутива (Arch-based)
 if ! grep -qi arch /etc/os-release; then
-    echo "❌ Этот скрипт для Arch Linux (или производных). Для других — ручная установка."
+    echo "Этот скрипт для Arch Linux (или производных). Для других — ручная установка."
     exit 1
 fi
 
 # Обновление и установка пакетов
-echo "📦 Установка Conky и lm-sensors..."
+echo "Установка Conky и lm_ensors..."
 sudo pacman -Syu --noconfirm --needed conky lm_sensors
 
 # Настройка датчиков (авто)
-echo "🌡️ Настройка датчиков температуры..."
+echo "Настройка датчиков температуры..."
 sudo sensors-detect --auto <<< "yes" || true  # Авто-yes для простоты
 sudo systemctl enable --now lm_sensors || true
 
@@ -33,7 +33,7 @@ else
 fi
 
 # Проверка датчиков
-echo "🔍 Проверка температуры (sensors):"
+echo "Проверка температуры (sensors):"
 sensors | grep -E "(coretemp|Package id)" || echo "Датчики CPU не найдены. Перезагрузись и проверь modprobe coretemp."
 
 # Запуск Conky
@@ -53,7 +53,7 @@ if ps -p $CONKY_PID > /dev/null; then
     echo "Остановить: killall conky"
     echo "Автозапуск: Добавь 'conky -c ~/.config/conky/conky.conf &' в ~/.xinitrc или i3 config."
 else
-    echo "❌ Conky не запустился. Проверь ошибки: conky -c ~/.config/conky/conky.conf"
+    echo "Conky не запустился. Проверь ошибки: conky -c ~/.config/conky/conky.conf"
 fi
 
 echo "Готово! Repo: https://github.com/als-creator/conky_conf"
