@@ -11,7 +11,43 @@
 ```ini
 curl для передачи данных
 jq для обработки json
+lm_sensors для снятия температур (пример пакета для archlinux, в разных дистрах названия разнятся)
 ```
+
+<details>
+<summary>Пример настройки сенсоров для archlinux</summary>
+
+# Обнови систему
+
+sudo pacman -Syu
+
+# Установи пакеты
+
+sudo pacman -S lm_sensors conky
+
+# Настрой датчики (мастер — отвечай yes по умолчанию, это безопасно)
+
+sudo sensors-detect --auto # Авто-режим для простоты
+
+# Включи сервис (автозагрузка модулей)
+
+sudo systemctl enable --now lm_sensors
+
+# Проверь вывод (ищи coretemp для Intel: Core 0: +45.0°C)
+
+sensors
+
+# Пример использования lm_sensors
+
+# ls /sys/class/hwmon/
+
+# cat /sys/class/hwmon/hwmon0/name пример для просмотра какой датчик будет отображаться
+
+# Ниже итоговая строка для конфига коньков, значение hwmon зависит от опрашиваемого устройства
+
+${color1}CPU:    ${color2}${cpu cpu0}% ${color3}[${hwmon 0 temp 1}°C]
+
+</details>
 
 ### Основные возможности:
 
