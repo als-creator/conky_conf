@@ -130,7 +130,7 @@ mkdir -p ~/.config/autostart && nano ~/.config/autostart/conky.desktop
 [Desktop Entry]
 Type=Application
 Name=Conky
-Exec=/usr/bin/conky
+Exec=/usr/bin/conky -c ~/.conkyrc
 Comment=Запуск Conky
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
