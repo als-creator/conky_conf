@@ -48,13 +48,14 @@ Wants=graphical-session.target
 
 [Service]
 Type=simple
-Environment=DISPLAY=:0
+Environment=DISPLAY=%i  # Для X11; для Wayland: WAYLAND_DISPLAY=wayland-0
+ExecStartPre=/bin/sleep 5
 ExecStart=/usr/bin/conky -c %h/.config/conky/conky.conf
 Restart=on-failure
 RestartSec=5
 
 [Install]
-WantedBy=default.target
+WantedBy=graphical-session.target
 EOF
 
 # Перезагрузка systemd user units
