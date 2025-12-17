@@ -6,7 +6,7 @@
 echo "Установка Conky + config для мониторинга температуры CPU с автозапуском"
 
 # Проверка дистрибутива (Arch-based)
-if ! grep -qi arch /etc/os-release; then
+if! grep -qi arch /etc/os-release; then
     echo "Этот скрипт для Arch Linux (или производных). Для других — ручная установка."
     exit 1
 fi
@@ -36,26 +36,23 @@ fi
 echo "Проверка температуры (sensors):"
 sensors | grep -E "(coretemp|Package id)" || echo "Датчики CPU не найдены. Перезагрузись и проверь modprobe coretemp."
 
-# Настройка автозапуска Conky через systemd для текущего пользователя
+# Настройка автозапуска Conky через systemd для текущего пользователя (основной метод)
 echo "Настройка автозапуска Conky через systemd..."
 mkdir -p ~/.config/systemd/user
 
-cat > ~/.config/systemd/user/conky.service << 'EOF'
+# Создаём systemd user service файл
+cat > ~/.config/systemd/user/conky.service << EOF
 [Unit]
 Description=Conky System Monitor
 After=graphical-session.target
-Wants=graphical-session.target
 
 [Service]
-Type=simple
-Environment=DISPLAY=%i  # Для X11; для Wayland: WAYLAND_DISPLAY=wayland-0
-ExecStartPre=/bin/sleep 5
-ExecStart=/usr/bin/conky -c %h/.config/conky/conky.conf
+ExecStart=/usr/bin/conky -c ~/.config/conky/conky.conf
 Restart=on-failure
 RestartSec=5
 
 [Install]
-WantedBy=graphical-session.target
+WantedBy=default.target
 EOF
 
 # Перезагрузка systemd user units
@@ -64,8 +61,25 @@ systemctl --user daemon-reload
 # Активация службы
 systemctl --user enable --now conky.service
 
+# Альтернатива: Автозапуск через.desktop (для DE вроде GNOME/KDE)
+echo "Настройка альтернативного автозапуска через.desktop..."
+mkdir -p ~/.config/autostart
+cat > ~/.config/autostart/conky.desktop << EOF
+[Desktop Entry]
+Type=Application
+Name=Conky
+Exec=/usr/bin/conky -c ~/.config/conky/conky.conf
+Comment=Запуск Conky
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Hidden=false
+Terminal=false
+EOF
+
 # Подсказка пользователю
 echo "Автозапуск настроен! Conky будет запускаться автоматически при входе в графическую сессию."
-echo "Проверить статус службы можно командой: systemctl --user status conky.service"
+echo "Проверить статус службы systemd: systemctl --user status conky.service"
+echo "Если используете DE, проверьте ~/.config/autostart/conky.desktop"
+echo "Для остановки: systemctl --user stop conky.service"
 
 echo "Готово! Repo: https://github.com/als-creator/conky_conf"
