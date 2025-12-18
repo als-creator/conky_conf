@@ -36,35 +36,28 @@ fi
 echo "Проверка температуры (sensors):"
 sensors | grep -E "(coretemp|Package id)" || echo "Датчики CPU не найдены. Перезагрузись и проверь modprobe coretemp."
 
-# Настройка автозапуска Conky через systemd для текущего пользователя (единственный метод)
-echo "Настройка автозапуска Conky через systemd..."
-mkdir -p ~/.config/systemd/user
+# Настройка автозапуска Conky через.desktop (единственный метод, для DE/WM)
+echo "Настройка автозапуска Conky через.desktop..."
+mkdir -p ~/.config/autostart
 
-# Создаём systemd user service файл
-cat > ~/.config/systemd/user/conky.service << EOF
-[Unit]
-Description=Conky System Monitor
-After=graphical-session.target
-
-[Service]
-ExecStart=/usr/bin/conky -c ~/.config/conky/conky.conf
-Restart=on-failure
-RestartSec=5
-
-[Install]
-WantedBy=default.target
+# Создаём.desktop файл
+cat > ~/.config/autostart/conky.desktop << EOF
+[Desktop Entry]
+Type=Application
+Name=Conky
+Exec=/usr/bin/conky -c ~/.config/conky/conky.conf
+Comment=Запуск Conky
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Hidden=false
+Terminal=false
 EOF
 
-# Перезагрузка systemd user units
-systemctl --user daemon-reload
-
-# Активация службы
-systemctl --user enable --now conky.service
-
 # Подсказка пользователю
-echo "Автозапуск настроен только через systemd! Conky будет запускаться автоматически при входе в графическую сессию."
-echo "Проверить статус службы: systemctl --user status conky.service"
-echo "Для остановки: systemctl --user stop conky.service"
-echo "Логи: journalctl --user -u conky.service -f"
+echo "Автозапуск настроен только через.desktop! Conky будет запускаться автоматически при входе в графическую сессию."
+echo "Проверить файл: ls ~/.config/autostart/conky.desktop"
+echo "Для тестирования: conky -c ~/.config/conky/conky.conf"
+echo "Для отключения: rm ~/.config/autostart/conky.desktop"
+echo "Если в WM (i3), добавьте в config WM: exec --no-startup-id conky -c ~/.config/conky/conky.conf"
 
 echo "Готово! Repo: https://github.com/als-creator/conky_conf"
