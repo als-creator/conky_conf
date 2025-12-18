@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# setup_conky.sh — Индивидуальная установка Conky config для Arch Linux с автозапуском
+# setup_conky.sh — Установка Conky config для Arch Linux с автозапуском
 # Автор: als-creator (conky_conf repo)
 
 echo "Установка Conky + config для мониторинга температуры CPU с автозапуском"
@@ -36,28 +36,53 @@ fi
 echo "Проверка температуры (sensors):"
 sensors | grep -E "(coretemp|Package id)" || echo "Датчики CPU не найдены. Перезагрузись и проверь modprobe coretemp."
 
-# Настройка автозапуска Conky через.desktop (единственный метод, для DE/WM)
-echo "Настройка автозапуска Conky через.desktop..."
-mkdir -p ~/.config/autostart
+# Создание systemd user service для автозапуска Conky
+echo "Настройка автозапуска Conky через systemd..."
+mkdir -p ~/.config/systemd/user
 
-# Создаём.desktop файл
-cat > ~/.config/autostart/conky.desktop << EOF
-[Desktop Entry]
-Type=Application
-Name=Conky
-Exec=/usr/bin/conky -c ~/.config/conky/conky.conf
-Comment=Запуск Conky
-NoDisplay=false
-X-GNOME-Autostart-enabled=true
-Hidden=false
-Terminal=false
+cat > ~/.config/systemd/system/conky.service << 'EOF'
+[Unit]
+Description=Conky System Monitor
+After=graphical-session.target
+Wants=graphical-session.target
+
+[Service]
+Type=simple
+Environment=DISPLAY=:0
+ExecStart=/usr/bin/conky -c %h/.config/conky/conky.conf
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
 EOF
 
-# Подсказка пользователю
-echo "Автозапуск настроен только через.desktop! Conky будет запускаться автоматически при входе в графическую сессию."
-echo "Проверить файл: ls ~/.config/autostart/conky.desktop"
-echo "Для тестирования: conky -c ~/.config/conky/conky.conf"
-echo "Для отключения: rm ~/.config/autostart/conky.desktop"
-echo "Если в WM (i3), добавьте в config WM: exec --no-startup-id conky -c ~/.config/conky/conky.conf"
+# Перезагрузка systemd user units и активация автозапуска
+systemctl --user daemon-reload
+systemctl --user enable --now conky.service
+
+echo "Autostart настроен! Conky будет запускаться автоматически при входе в графическую сессию."
+echo "Проверить статус: systemctl --user status conky.service"
+
+# Запуск Conky для текущей сессии
+if pgrep -x "conky" > /dev/null; then
+    echo "Перезапуск Conky..."
+    killall conky
+    sleep 1
+fi
+
+conky -c ~/.config/conky/conky.conf &
+CONKY_PID=$!
+
+# Проверка запуска
+if ps -p $CONKY_PID > /dev/null; then
+    echo "Conky запущен! Температура Intel CPU отображается в реалтайм."
+    echo "Проверь: sensors (должно быть coretemp с ~30-40°C)"
+    echo "Остановить: systemctl --user stop conky.service"
+    echo "Отключить автозапуск: systemctl --user disable conky.service"
+else
+    echo "Conky не запустился. Проверь ошибки: conky -c ~/.config/conky/conky.conf"
+fi
 
 echo "Готово! Repo: https://github.com/als-creator/conky_conf"
+echo "Статус сервиса можно проверить через systemctl --user status conky.service"
