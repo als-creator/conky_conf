@@ -45,8 +45,8 @@ cat > ~/.config/autostart/conky.desktop << EOF
 [Desktop Entry]
 Type=Application
 Name=Conky
-Exec=conky -c ~/.config/conky/conky.conf --daemonize --pause=5
-Comment=Системный мониторинг Conky
+Exec=sh -c "conky -c /home/$USER/.config/conky/conky.conf"
+Comment=Conky system monitor
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
 Hidden=false
