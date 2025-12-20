@@ -94,10 +94,13 @@ ${color1}CPU:    ${color2}${cpu cpu0}% ${color3}[${hwmon 0 temp 1}°C]
 ---
 
 #### Установка и использование:
+
 Автонастройка для ArchLinux:
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/als-creator/conky_conf/main/setup_conky.sh | bash
 ```
+
 Для других дистров
 
 Скопируйте этот конфиг в домашний каталог:
