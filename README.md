@@ -72,6 +72,7 @@ ls /sys/class/hwmon/hwmon3/temp*_input
 Например:
 
 temp1_input → ${hwmon 2 temp 1}
+
 temp2_input → ${hwmon 2 temp 2}
 
 Сравните значения:
